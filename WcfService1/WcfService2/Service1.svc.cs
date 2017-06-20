@@ -21,7 +21,7 @@ namespace WcfService2
             return string.Format("You entered: {0}", value);
         }
 
-        public Int32 add(Int32 value,Int32 value2)
+        public Int32 add(Int32 value, Int32 value2)
         {
             return value + value2;
         }
@@ -48,47 +48,43 @@ namespace WcfService2
             List<Trip> list = ParseCVS();
             List<string> outputList = new List<string>();
             List<string> temp = new List<string>();
-           
-                foreach (Trip record in list)
+
+            foreach (Trip record in list)
+            {
+                if (record.StartPoint.Equals(start) && record.EndPoint.Equals(stop) && DateTime.Compare(Convert.ToDateTime(record.StartTime), Convert.ToDateTime(record.EndTime)) <= 0)
                 {
-                    if (record.StartPoint.Equals(start) && record.EndPoint.Equals(stop) && DateTime.Compare(Convert.ToDateTime(record.StartTime), Convert.ToDateTime(record.EndTime))<=0)
-                    {
-                        outputList.Add(toStringTrainData(record));
-                    }
+                    outputList.Add(toStringTrainData(record));
                 }
+            }
             temp = findIndircet(start, stop);
-                foreach(string t in temp)
+            foreach (string t in temp)
             {
                 outputList.Add(t);
             }
+            try
+            {
                 if (!outputList.Any())
                 {
-                    outputList.Add("Brak");
-                throw new FaultException("Brak połączenia");
+                    outputList.Add("Brak Połączenia");
+                    // throw new FaultException("Brak połączenia");
+                }
             }
-            
-           
+            catch (FaultException e)
+            {
+                outputList.Add("Brak połączeń");
+            }
+
+
 
             return outputList;
 
-          
+
         }
 
-        private bool isListContainsString(List<string> list, string str)
-        {
-            foreach (string element in list)
-            {
-                if (element == str)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
 
-        private List<string> findIndircetConnectionsWithTime(string start, string end, string startTime,DateTime date, DateTime dateEnd)
+        private List<string> findIndircetConnectionsWithTime(string start, string end, string startTime, DateTime date, DateTime dateEnd)
         {
-           
+
             List<Trip> startTemp = new List<Trip>();
             List<Trip> temp = new List<Trip>();
             foreach (Trip trip in allTrips)
@@ -109,15 +105,14 @@ namespace WcfService2
             {
                 foreach (Trip endT in temp)
                 {
-                 
+
                     if (startT.EndPoint == endT.StartPoint && DateTime.Compare(Convert.ToDateTime(startT.StartTime), Convert.ToDateTime(endT.EndTime)) <= 0 && DateTime.Compare(Convert.ToDateTime(endT.EndTime), dateEnd) <= 0)
                     {
                         string res = startT.StartPoint + " " + startT.StartTime + " " + startT.EndPoint + " " + startT.EndTime + " " + endT.EndPoint + " " + endT.EndTime;
-                        if (!isListContainsString(indirectRoutes, res))
-                        {
-                            indirectRoutes.Add(res);
 
-                        }
+                        indirectRoutes.Add(res);
+
+
                     }
 
 
@@ -155,7 +150,7 @@ namespace WcfService2
             {
                 foreach (Trip endT in temp)
                 {
-                    if (startT.EndPoint == endT.StartPoint)
+                    if (startT.EndPoint == endT.StartPoint && DateTime.Compare(Convert.ToDateTime(startT.StartTime), Convert.ToDateTime(endT.EndTime)) <= 0)
                     {
                         string res = startT.StartPoint + " " + startT.StartTime + " " + startT.EndPoint + " " + startT.EndTime + " " + endT.EndPoint + " " + endT.EndTime;
 
@@ -199,33 +194,11 @@ namespace WcfService2
             }
             return allTrips;
         }
- 
-
-        public bool isTrainOnDay(string day)
-        {
-            foreach (Trip p in allTrips)
-            {
-                string dzien;
-                string miesiac;
-                string rok;
-                var splitedLine3 = p.StartTime.Split('-');
-                rok = splitedLine3[0];
-                miesiac = splitedLine3[1];
-                var splitedLine4 = splitedLine3[2].Split(' ');
-                dzien = splitedLine4[0];
-                string date = rok + miesiac + dzien;
-                if (date.Equals(day))
-                {
-                    return true;
-                }
-            }
 
 
-            return false;
-        }
 
-       
-        public List<string> getTripWithTime(string start, string stop, string timeS,DateTime date,DateTime dateEnd)
+
+        public List<string> getTripWithTime(string start, string stop, string timeS, DateTime date, DateTime dateEnd)
         {
 
             List<Trip> list = ParseCVS();
@@ -241,24 +214,24 @@ namespace WcfService2
                 int a = int.Parse(checktime);
                 int b = int.Parse(timeS);
 
-                  if (DateTime.Compare(Convert.ToDateTime(record.StartTime), date) >= 0 &&  DateTime.Compare(Convert.ToDateTime(record.EndTime), dateEnd) <= 0)
-                  {
-                      if (record.StartPoint.Equals(start) && record.EndPoint.Equals(stop))
-                      {
-                          outputList.Add(toStringTrainData(record));
-                      }
-                  }
+                if (DateTime.Compare(Convert.ToDateTime(record.StartTime), date) >= 0 && DateTime.Compare(Convert.ToDateTime(record.EndTime), dateEnd) <= 0)
+                {
+                    if (record.StartPoint.Equals(start) && record.EndPoint.Equals(stop))
+                    {
+                        outputList.Add(toStringTrainData(record));
+                    }
+                }
 
             }
 
 
-                
-                temp = findIndircetConnectionsWithTime(start, stop, timeS,date,dateEnd);
-                foreach (string t in temp)
-                {
-                    outputList.Add(t);
-                }
-            
+
+            temp = findIndircetConnectionsWithTime(start, stop, timeS, date, dateEnd);
+            foreach (string t in temp)
+            {
+                outputList.Add(t);
+            }
+
             if (!outputList.Any())
             {
                 outputList.Add("Brak");
@@ -266,6 +239,7 @@ namespace WcfService2
             return outputList;
         }
 
- 
 
-    }}
+
+    }
+}
